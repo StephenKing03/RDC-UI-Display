@@ -1,0 +1,35 @@
+import tkinter as tk
+import customtkinter as ctk
+from tkinter import ttk
+
+window = tk.Tk()
+def get_pos(event):
+    print(f'x:{event.x}, y:{event.y}')
+
+
+text = tk.Text(window)
+text.pack()
+
+entry = ttk.Entry(window)
+entry.pack()
+
+btn = ttk.Button(window, text = 'A button')
+btn.pack
+
+ 
+ #combobox
+items = ('Ice cream', 'Pizza', 'Broccoli')
+combo = ttk.Combobox(window)
+combo['values'] = items
+combo.pack()
+
+#events
+combo.bind('<<ComboboxSelected>>', lambda e: print(combo.get()))
+
+#spinbox
+spin = ttk.Spinbox(window, from_=0, to=10, increment = 3)
+spin.pack()
+
+
+
+window.mainloop()

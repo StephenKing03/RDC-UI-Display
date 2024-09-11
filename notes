@@ -1,0 +1,105 @@
+canvas (tk)
+#### docs: www.tutorialspoint.com/poython/tk_menu.htm
+
+'''treeview for tables'''
+table = ttk.Treeview(window, columns = ('first', 'second', 'third'))
+table.heading('#0', text = 'Name')            #title
+table.insert(parent = '', iondex = 0)
+table.bin('<<TreeviewSelect>>', get_pos) #find which position is selected
+
+
+'''slider and progress bars'''
+cale = tk.DoubleVar(value = 15)
+scale = ttk.Scale(window, command = lambda value: print(), from_ = 0, to = 25, orient = 'vertical', variable = scale_float) #slider 
+
+progress = ttk.Progressbar(window, variable = ..., maximum, ..., mode = 'indeterminate', length = 100 ) #progress bar
+progress.start(1000) #not reccomended, argument in milliseconds is an interval
+
+'''scrollable text'''
+scrolltext = scrolledtext.ScrolledText(window, width = ...) #normally dont do this
+
+''''''
+canvas = tk.Canvas(window)
+canvas.create_window((0,0), window = ttk.Button(window, text = 'hi'))
+
+
+'''different tabs'''
+notebook = ttki.Notebook(window)
+tab1 = ttk.Frame(notebook)
+label1 = ttk.Label(tab1, text = 'hi')
+
+notebook.add(tab1, text = 'Teab1')
+notebook.add(tab2,...)
+notebook.pack()
+
+'''tk Menues, can be nested'''
+menu = tk.Menu(window) #menu bar
+
+file_menu = tk.Menu(menu, tearoff = False) #tab in the menu bar
+file_menu.add_command(label = 'New, command = lambda: print('hi)')
+file_menu.add_separator() 
+menu.add_cascade(label = 'File, menu = file_menu') ##option for the dropdown
+
+help_menu = tk.Menu(menu, tearoff = false)
+help_mena.add_command(...)
+menu.addcascade(label = 'Help', menu = help_menu)
+window.configure(menu = menu)
+
+#orrr
+menu_button = ttk.Menubutton(window,text = 'Menu Button')
+menu_button.configure
+
+
+'''window settings'''
+
+window.minsize(200,100)
+window.maxsize(200,100)
+window.resizable(True,False)
+
+# screen attributes
+window.winfo_screenwidth()
+wubdiw.attributes('-topmost', True)
+window.bind('<Escape>', lambda event:window.quit())
+window.attribute('fullscreen', True)  #start in fullscreen
+window.overrideredirect(True)
+grip = ttk.Sizegrip(window)
+grip.place(relx,rely)
+
+'''layout options'''
+
+#.pack
+#.grid generally the way to go
+#.place
+
+label.pack(side = 'left', expand = True, fill ='x') #side = alignment fill = x,y,both
+
+window.columnconfigure(0, weight = 1)
+window.columnconfigure(1, weight = 1)
+window.columnconfigure(2, weight = 2)
+
+label1.grid(row = 0, colums = 1, sticky = 'nsew')
+label2.grid(row =1,column = 1, columnspan = 2)
+
+label1.place (x =, y = , ...)
+label2-place(relx = 0.5, rely = 0.5) #relative orientation stays the same always
+
+####
+
+arguments of pack: 
+side = left, right, top botton
+exopand = false, true : how much the widget CAN occupy
+fill = x,y,both, how much it will occupy
+
+padx or pady visual padding (white space)
+
+ipadx, i pady = functional padding
+
+''''define frames'''
+
+window.columnconfigure((0,1,2). weight = 1, uniform = 'a') #uniform makes all the columns with the same string uniformly sized 
+
+#control the stacking order 
+label1.lift() or label1.tkraise()
+
+label.place_forget() #unplace a label
+label.grid_forget() #forget label
