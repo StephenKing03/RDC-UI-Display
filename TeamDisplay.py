@@ -18,7 +18,7 @@ greencolor = '#038024'
 
 '''#main window for the team display '''
 class Display(ctk.CTkToplevel):
-    def __init__(self, parent, settings):
+    def __init__(self, parent, settings, blue_score, red_score):
         global match_settings
         match_settings = settings
         
@@ -39,27 +39,36 @@ class Display(ctk.CTkToplevel):
         self.rowconfigure(1, weight = 25)
         
         #define the frames
-        self.blue_console = TeamConsole(self, bluecolor)
+        self.blue_console = TeamConsole(self, bluecolor, blue_score)
         self.blue_console.grid(row = 0, column = 0, sticky = 'nsew')
 
         self.middle_console = MiddleConsole(self)
         self.middle_console.grid(row = 0, column = 1, sticky = 'nsew')
 
-        self.red_console = TeamConsole(self, redcolor)
+        self.red_console = TeamConsole(self, redcolor, red_score)
         self.red_console.grid(row = 0, column = 2, sticky = 'nsew')
         
-        self.match_status_console = MatchStatusConsole(self)
+        self.match_status_console = MatchStatusConsole(self, blue_score, red_score)
         self.match_status_console.grid(row = 1, column = 0, columnspan = 3, sticky = 'nsew')
 
         #close the app on escape
         self.bind("<Escape>", lambda event: self.destroy())
 
-class MatchStatusConsole(ctk.CTkFrame):
-    def __init__(self, master):
-        super().__init__(master, fg_color = 'grey')
-        self.create_widgets()
+        #final frame
+        self.final_frame = ctk.CTkFrame(self,fg_color = groundcolor)
+        
+        match_settings.show_confirm.trace_add("write", self.confirm_score)
 
-    def create_widgets(self):
+        
+    def confirm_score(self, *args):
+        self.final_frame.grid(row = 0, rowspan = 2, column = 0, columnspan = 3)
+
+        #self.test_label = ctk.CTkLabel(self, text = "This is a test")
+        #self.test_label.pack(master = self.final_frame)
+
+class MatchStatusConsole(ctk.CTkFrame):
+    def __init__(self, master, blue_score, red_score):
+        super().__init__(master, fg_color = 'grey')
 
         global match_settings
 
@@ -81,8 +90,8 @@ class MatchStatusConsole(ctk.CTkFrame):
         self.pointsFrame = ctk.CTkFrame(self, fg_color = 'black')
         self.pointsFrame.grid(row = 1, column = 1, rowspan = 2, sticky = 'nsew')
 
-        points_blue_label = ctk.CTkLabel(self.pointsFrame, textvariable = match_settings.blue_total_score, fg_color = bluecolor, font = ('Helvetica', 60 * scaling_unit_height, 'bold'), )
-        points_red_label = ctk.CTkLabel(self.pointsFrame, text = "15", fg_color = redcolor, font = ('Helvetica', 60 * scaling_unit_height, 'bold'), )
+        points_blue_label = ctk.CTkLabel(self.pointsFrame, textvariable = blue_score.total_score, fg_color = bluecolor, font = ('Helvetica', 60 * scaling_unit_height, 'bold'), )
+        points_red_label = ctk.CTkLabel(self.pointsFrame, textvariable = red_score.total_score, fg_color = redcolor, font = ('Helvetica', 60 * scaling_unit_height, 'bold'), )
         
         points_blue_label.pack(side = tk.LEFT, fill = "both", expand = True)
         points_red_label.pack(side = tk.RIGHT, fill = "both", expand = True)
@@ -110,6 +119,8 @@ class MatchStatusConsole(ctk.CTkFrame):
 
         current_time_seconds = match_settings.current_time.get()
         self.progress.set(1- float(current_time_seconds) / float(match_settings.total_matchtime))
+
+
 
         
 class MiddleConsole(ctk.CTkFrame):
@@ -203,12 +214,12 @@ class MiddleConsole(ctk.CTkFrame):
         pass
 
 class TeamConsole(ctk.CTkFrame):
-    def __init__(self, master,color):
+    def __init__(self, master,color, team):
         super().__init__(master, fg_color = color)
-        self.create_widgets(color)
+        self.create_widgets(color, team)
         self.init_color = color
 
-    def create_widgets(self, color):
+    def create_widgets(self, color, team):
 
         global match_settings
         #create grid
@@ -233,9 +244,9 @@ class TeamConsole(ctk.CTkFrame):
         self.image_canvas.bind('<Configure>', self.resize_image)
         
         #import labels for scores:
-        self.highgoal_label = ctk.CTkLabel(self, textvariable = match_settings.teamblue_highgoal, fg_color = groundcolor, font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15)
-        self.midgoal_label = ctk.CTkLabel(self,textvariable = match_settings.teamblue_midgoal, fg_color = groundcolor, font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15)
-        self.lowgoal_label = ctk.CTkLabel(self, textvariable = match_settings.teamblue_lowgoal, fg_color = groundcolor, font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15)
+        self.highgoal_label = ctk.CTkLabel(self, textvariable = team.highgoal, fg_color = groundcolor, font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15)
+        self.midgoal_label = ctk.CTkLabel(self,textvariable = team.midgoal, fg_color = groundcolor, font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15)
+        self.lowgoal_label = ctk.CTkLabel(self, textvariable = team.lowgoal, fg_color = groundcolor, font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15)
 
         self.highgoal_label.grid(row = 0, column = 0, sticky = 'nsew', padx = 5 * scaling_unit, pady = 25 * scaling_unit)
         self.midgoal_label.grid(row = 1, column = 0, sticky = 'nsew', padx = 5 * scaling_unit, pady = 25 * scaling_unit)
@@ -281,8 +292,8 @@ class TeamConsole(ctk.CTkFrame):
         bottom_frame.grid_columnconfigure((1,2), weight = 1, uniform = 'h')
         bottom_frame.grid_rowconfigure(1, weight = 1, uniform = 'h')
 
-        self.park1 = parking_display(bottom_frame, match_settings.robotblue1_park).grid(row = 0, column = 1, sticky = 'nsew', padx = 25 * scaling_unit)
-        self.park2 = parking_display(bottom_frame,match_settings.robotblue2_park).grid(row = 0, column = 2, sticky = 'nsew', padx = 25 * scaling_unit)
+        self.park1 = parking_display(bottom_frame, team.robot1_park).grid(row = 0, column = 1, sticky = 'nsew', padx = 25 * scaling_unit)
+        self.park2 = parking_display(bottom_frame,team.robot2_park).grid(row = 0, column = 2, sticky = 'nsew', padx = 25 * scaling_unit)
 
         #self.penalty_frame = ctk.CTkLabel(bottom_frame, text = "0", fg_color = groundcolor, font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15)
         

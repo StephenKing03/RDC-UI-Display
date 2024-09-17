@@ -3,6 +3,16 @@ import tkinter as tk
 #this is the class for all the match settings and tkinter variables that are imported everywhere
 #singleton class to store all the settings that can be set in the controller and displayed in the display
 
+       #set this here manually
+
+pointslow = 5
+pointsmid = 7
+pointshigh = 10
+pointsparkhigh = 15
+pointsparklow = 6
+small_penalty = 15
+big_penalty = 30
+
 class MatchSettings:
 
     _instance = None
@@ -15,13 +25,7 @@ class MatchSettings:
 
     def init(self):
 
-        self.pointslow = 5
-        self.pointsmid = 7
-        self.pointshigh = 10
-        self.pointsparkhigh = 15
-        self.pointsparklow = 6
-        self.smallpenalty = 15
-        self.bigpenalty = 30
+ 
 
         #all the settings that can be changed for the match, times are at which time this happens
         self.total_matchtime = 60
@@ -32,6 +36,7 @@ class MatchSettings:
 
         self.event_trigger = tk.StringVar(value = "nothing")
         self.match_stopped = tk.BooleanVar(value = False)
+        self.show_confirm = tk.BooleanVar(value = False)
 
         self.current_time = tk.DoubleVar(value = self.total_matchtime)
         self.refill_time = tk.DoubleVar(value = self.firstball_drop - self.total_matchtime)
@@ -40,71 +45,63 @@ class MatchSettings:
         self.teamblue_2_name = tk.StringVar(value = 'b2')
         self.teamred_1_name = tk.StringVar(value = 'r1')
         self.teamred_2_name = tk.StringVar(value = 'r2')
-
-        #all the scoring communication using tkinter variables ( they are continuously updated while the mainloop() runs )
-        self.teamred_highgoal = tk.IntVar(value = 0)
-        self.teamred_midgoal = tk.IntVar(value = 0)
-        self.teamred_lowgoal = tk.IntVar(value = 0)
-        self.robotred1_park = tk.StringVar(value = "not parked")
-        self.robotred2_park = tk.StringVar(value = "not parked")
-        self.teamred_penalty = tk.IntVar(value = 0)
-
-        self.teamblue_highgoal = tk.IntVar(value = 0)
-        self.teamblue_midgoal = tk.IntVar(value = 0)
-        self.teamblue_lowgoal = tk.IntVar(value = 0)
-        self.robotblue1_park = tk.StringVar(value = "not parked")
-        self.robotblue2_park = tk.StringVar(value = "not parked")
-        self.teamblue_penalty = tk.IntVar(value = 0)
-
-        self.blue_total_score = tk.IntVar(value = 0)
-        self.red_total_score = tk.IntVar(value = 0)
-
-         # Trace changes to individual variables to update the total score
-        self.teamblue_highgoal.trace_add("write", self.update_blue_total_score)
-        self.teamblue_midgoal.trace_add("write", self.update_blue_total_score)
-        self.teamblue_lowgoal.trace_add("write", self.update_blue_total_score)
-        self.robotblue1_park.trace_add("write", self.update_blue_total_score)
-        self.robotblue2_park.trace_add("write", self.update_blue_total_score)
-        self.teamblue_penalty.trace_add("write", self.update_blue_total_score)
-
-
-
-    def update_blue_total_score(self, *args):
-        total = (self.teamblue_highgoal.get()*self.pointshigh +
-                    self.teamblue_midgoal.get()*self.pointsmid +
-                    self.teamblue_lowgoal.get()*self.pointslow)
-        
-        if(self.robotblue1_park.get() == "high park"):
-            total += self.pointsparkhigh
-        elif(self.robotblue1_park.get() == "low park"):
-            total += self.pointsparklow
-
-        total += self.teamblue_penalty.get()
-
-        self.blue_total_score.set(total)
-        
-
+    
     #easy match reset for the next match
-    def reset_match(self):
-
-        self.teamred_highgoal.set(0)
-        self.teamred_midgoal.set(0)
-        self.teamred_lowgoal.set(0)
-        self.robotred1_park.set(value = "not parked")
-        self.robotred2_park.set(value = "not parked")
-        self.teamred_penalty.set(0)
-
-        self.teamblue_highgoal.set(0)
-        self.teamblue_midgoal.set(0)
-        self.teamblue_lowgoal.set(0)
-        self.robotblue1_park.set(value = "not parked")
-        self.robotblue2_park.set(value = "not parked")
-        self.teamblue_penalty.set(0)
+    def reset_matchstate(self):
 
         self.current_time.set(value = self.total_matchtime)
         self.refill_time.set(value =  self.total_matchtime  - self.firstball_drop)
         self.event_trigger.set(value = "reset match")
         self.match_stopped.set(True)
+    
+class TeamScores:
+
+    def __init__(self):
+
+        self.highgoal = tk.IntVar(value = 0)
+        self.midgoal = tk.IntVar(value = 0)
+        self.lowgoal = tk.IntVar(value = 0)
+        self.robot1_park = tk.StringVar(value = "not parked")
+        self.robot2_park = tk.StringVar(value = "not parked")
+        self.penalty = tk.IntVar(value = 0)
+
+        self.total_score = tk.IntVar(value = 0)
+
+        # Trace changes to individual variables to update the total score live
+        self.highgoal.trace_add("write", self.update_total_score)
+        self.midgoal.trace_add("write", self.update_total_score)
+        self.lowgoal.trace_add("write", self.update_total_score)
+        self.robot1_park.trace_add("write", self.update_total_score)
+        self.robot2_park.trace_add("write", self.update_total_score)
+        self.penalty.trace_add("write", self.update_total_score)
+
+
+
+    def reset_team_score(self):
+
+
+        self.highgoal.set(0)
+        self.midgoal.set(0)
+        self.lowgoal.set(0)
+        self.robot1_park.set(value = "not parked")
+        self.robot2_park.set(value = "not parked")
+        self.penalty.set(0)       
+
+    def update_total_score(self, *args):
+        total = (self.highgoal.get()*pointshigh +
+                    self.midgoal.get()*pointsmid +
+                    self.lowgoal.get()*pointslow)
+        
+        if(self.robot1_park.get() == "high park"):
+            total += pointsparkhigh
+        elif(self.robot1_park.get() == "low park"):
+            total += pointsparklow
+
+        total += self.penalty.get()
+
+        self.total_score.set(total)
+        
+
 
     def increment_score(self, variable):
         variable.set( variable.get() + 1)
@@ -118,16 +115,16 @@ class MatchSettings:
 
         if(add):
             print("added small penalty")
-            variable.set(variable.get() + self.smallpenalty)
+            variable.set(variable.get() + small_penalty)
         else:
             print("subtracted small penalty")
-            variable.set(variable.get() - self.smallpenalty)
+            variable.set(variable.get() - small_penalty)
 
     def big_penalty(self, variable, add = True):
 
         if(add):
             print("added big penalty")
-            variable.set(variable.get() + self.bigpenalty)
+            variable.set(variable.get() + big_penalty)
         else:
             print("subtracted big penalty")
-            variable.set(variable.get() - self.bigpenalty)
+            variable.set(variable.get() - big_penalty)
