@@ -5,13 +5,14 @@ import tkinter as tk
 
        #set this here manually
 
+#set this also in TeamDisplay.py !!
 pointslow = 5
 pointsmid = 7
 pointshigh = 10
 pointsparkhigh = 15
 pointsparklow = 6
-small_penalty = 15
-big_penalty = 30
+small_penalty = -15
+big_penalty = -30
 
 class MatchSettings:
 
@@ -28,11 +29,11 @@ class MatchSettings:
  
 
         #all the settings that can be changed for the match, times are at which time this happens
-        self.total_matchtime = 60
-        self.endgame_duration = self.total_matchtime - 50
-        self.firstball_drop = self.total_matchtime - 10
-        self.secondball_drop = self.total_matchtime - 20
-        self.thirdball_drop = self.total_matchtime - 40
+        self.total_matchtime = 180
+        self.endgame_duration = self.total_matchtime - 150
+        self.firstball_drop = self.total_matchtime - 60
+        self.secondball_drop = self.total_matchtime - 90
+        self.thirdball_drop = self.total_matchtime - 120
 
         self.event_trigger = tk.StringVar(value = "nothing")
         self.match_stopped = tk.BooleanVar(value = False)
@@ -53,6 +54,7 @@ class MatchSettings:
         self.refill_time.set(value =  self.total_matchtime  - self.firstball_drop)
         self.event_trigger.set(value = "reset match")
         self.match_stopped.set(True)
+        self.show_confirm.set(False)
     
 class TeamScores:
 
@@ -95,6 +97,11 @@ class TeamScores:
         if(self.robot1_park.get() == "high park"):
             total += pointsparkhigh
         elif(self.robot1_park.get() == "low park"):
+            total += pointsparklow
+
+        if(self.robot2_park.get() == "high park"):
+            total += pointsparkhigh
+        elif(self.robot2_park.get() == "low park"):
             total += pointsparklow
 
         total += self.penalty.get()

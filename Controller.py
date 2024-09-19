@@ -53,10 +53,11 @@ class Controller(ctk.CTk):
         self.InitDisplay = ctk.CTkButton(self.Button_frame, text = "Init Display", fg_color = '#870065', font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15, command = self.start_display)
         self.InitDisplay.pack(expand = True, fill = 'both', side = 'left', padx = 10 * scaling_unit, pady = 10 * scaling_unit)
 
-        self.StartMatch = ctk.CTkButton(self.Button_frame, text = "Start Match", fg_color = 'green', font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15)
+        self.StartMatch = ctk.CTkButton(self.Button_frame, text = "Start Match", fg_color = 'green', font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15, command = self.start_match)
         self.StartMatch.pack(expand = True, fill = 'both', side = 'left', padx = 10 * scaling_unit, pady = 10 * scaling_unit)
 
         self.ConfirmScore = ctk.CTkButton(self.Button_frame, text = "Confirm Score", fg_color = 'blue', font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15, command = self.toggle_confirm)
+        self.showed_confirm = False
         self.ConfirmScore.pack(expand = True, fill = 'both', side = 'left', padx = 10 * scaling_unit, pady = 10 * scaling_unit)
 
         self.ResetScore = ctk.CTkButton(self.Button_frame, text = "Reset Score", fg_color = 'red', font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15, command = self.reset_match)
@@ -86,8 +87,18 @@ class Controller(ctk.CTk):
     
     def toggle_confirm(self):
         global match_settings
-        match_settings.show_confirm.set(value = True)
-        
+
+        if(self.showed_confirm == False):
+            match_settings.show_confirm.set(value = True)
+            self.showed_confirm = True
+            match_settings.match_stopped.set(value = False)
+
+        else:
+            match_settings.show_confirm.set(value = False)
+            match_settings.match_stopped.set(value = True)
+            self.showed_confirm = False
+
+    ''' EDIT HERE FOR SERVO ACTION!!!!------------------------------------------------------------------------------------------------'''
     def update_matchtimer(self):
         global match_settings
         current_time = match_settings.current_time.get()
@@ -115,10 +126,11 @@ class Controller(ctk.CTk):
             
         #advance the matchtimer
         if current_time > 0 and match_settings.match_stopped.get() != True:
-            match_settings.current_time.set(current_time -0.01)
+            match_settings.current_time.set(current_time -0.3) 
             self.after(10, self.update_matchtimer) #initiate the next instance
         else:
             print("Match Ended------------------------------------")
+            match_settings.match_stopped.set(value = True)
             pass 
         print(current_time)
         print(match_settings.event_trigger.get())
@@ -131,6 +143,7 @@ class Controller(ctk.CTk):
         match_settings.match_stopped.set(False)
         blue_score.reset_team_score()
         red_score.reset_team_score()
+        match_settings.show_confirm.set(False)
 
         self.update_matchtimer()
     '''define functions that act on certain timed events, like ball drop and add functions in update_matchtimer function'''
@@ -175,6 +188,8 @@ class SettingsDisplay(ctk.CTkScrollableFrame):
         '''
 
 #scoring for both teams
+
+''' EDIT HERE OR TAKE AS REFERENCE!!!----------------------------------------------------------------------------------------------------------'''
 class Scoring(ctk.CTkFrame):
     def __init__(self, master, color, team):
         super().__init__(master, fg_color = color)

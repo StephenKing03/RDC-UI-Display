@@ -5,6 +5,14 @@ import customtkinter as ctk
 from  PIL import Image, ImageTk
 import os
 
+pointslow = 5
+pointsmid = 7
+pointshigh = 10
+pointsparkhigh = 15
+pointsparklow = 6
+small_penalty = -15
+big_penalty = -30
+
 
 match_settings = None
 redcolor = '#ff9028'
@@ -21,6 +29,8 @@ class Display(ctk.CTkToplevel):
     def __init__(self, parent, settings, blue_score, red_score):
         global match_settings
         match_settings = settings
+        self.red_score =   red_score
+        self.blue_score = blue_score
         
         super().__init__(parent)
         self.title("RDC Match Display")
@@ -55,17 +65,151 @@ class Display(ctk.CTkToplevel):
         self.bind("<Escape>", lambda event: self.destroy())
 
         #final frame
+        
         self.final_frame = ctk.CTkFrame(self,fg_color = groundcolor)
+        self.display_final_score()
         
         match_settings.show_confirm.trace_add("write", self.confirm_score)
 
         
     def confirm_score(self, *args):
-        self.final_frame.grid(row = 0, rowspan = 2, column = 0, columnspan = 3)
+        
+        
+        if(match_settings.show_confirm.get()):
+            #display winner
+            if(self.blue_score.total_score.get() > self.red_score.total_score.get()):
+                self.winner_label.grid(row = 0, column = 0, sticky = 'nsew', padx = 5 * scaling_unit, pady = 5 * scaling_unit)
+                self.draw_1_label.grid_forget()
+                self.draw_2_label.grid_forget()
+            elif(self.blue_score.total_score.get() < self.red_score.total_score.get()):
+                self.winner_label.grid(row = 0, column = 2, sticky = 'nsew', padx = 5 * scaling_unit, pady = 5 * scaling_unit)
+                self.draw_1_label.grid_forget()
+                self.draw_2_label.grid_forget()
+            else:
+                self.draw_2_label.grid(row = 0, column = 0, sticky = 'nsew', padx = 5 * scaling_unit, pady = 5 * scaling_unit)
+                self.draw_1_label.grid(row = 0, column = 2, sticky = 'nsew', padx = 5 * scaling_unit, pady = 5 * scaling_unit)
+                self.winner_label.grid_forget()
+
+            self.highgoal.reconfigure(self.blue_score.highgoal.get() *pointshigh , self.red_score.highgoal.get() * pointshigh )
+            self.midgoal.reconfigure(self.blue_score.midgoal.get()*pointsmid, self.red_score.midgoal.get()*pointsmid)
+            self.lowgoal.reconfigure(self.blue_score.lowgoal.get()*pointslow, self.red_score.lowgoal.get()*pointslow)
+            
+            red_park = 0
+            blue_park = 0
+            if(self.blue_score.robot1_park.get() == "high park"):
+                blue_park += pointsparkhigh
+            elif(self.blue_score.robot1_park.get() == "low park"):
+                blue_park += pointsparklow
+
+            if(self.blue_score.robot2_park.get() == "high park"):
+                blue_park += pointsparkhigh
+            elif(self.blue_score.robot2_park.get() == "low park"):
+                blue_park += pointsparklow
+
+            if(self.red_score.robot1_park.get() == "high park"):
+                red_park += pointsparkhigh
+            elif(self.red_score.robot1_park.get() == "low park"):
+                red_park += pointsparklow
+
+            if(self.red_score.robot2_park.get() == "high park"):
+                red_park += pointsparkhigh
+            elif(self.red_score.robot2_park.get() == "low park"):
+                red_park += pointsparklow
+            
+            self.parking.reconfigure(blue_park, red_park)
+            self.penalty.reconfigure( self.blue_score.penalty.get(), self.red_score.penalty.get())
+
+            self.total.reconfigure(self.blue_score.total_score.get(), self.red_score.total_score.get())
+
+
+            #display this hell
+            self.final_frame.grid(row = 0, column = 0, columnspan = 3,rowspan = 1,  sticky = 'nsew')
+        else:
+            self.final_frame.grid_forget()
+            self.score_shown = False
+        
 
         #self.test_label = ctk.CTkLabel(self, text = "This is a test")
         #self.test_label.pack(master = self.final_frame)
 
+    def display_final_score(self):
+        
+        self.scoring_frame = ctk.CTkFrame(self.final_frame, fg_color = groundcolor, width = self.winfo_width() * 0.7)
+        self.scoring_frame.pack(side = 'top', expand = True, fill = tk.BOTH)
+        #title with info who won
+        self.title_frame = ctk.CTkFrame(self.scoring_frame, fg_color = "black", corner_radius= 0)
+        self.title_frame.pack(side = 'top', expand = True, fill = tk.BOTH)
+        self.title_frame.columnconfigure(0, weight = 1, uniform = 'a')
+        self.title_frame.columnconfigure(1, weight = 2, uniform = 'a')
+        self.title_frame.columnconfigure(2, weight = 1, uniform = 'a')
+
+        self.title_lable = ctk.CTkLabel(self.title_frame, text = "Endstand", font = ('Helvetica', 40 * scaling_unit, 'bold'), corner_radius = 0, fg_color = "black")
+        self.title_lable.grid(row = 0, column = 1, sticky = 'nsew', padx = 5 * scaling_unit, pady = 5 * scaling_unit)
+
+        self.winner_label = ctk.CTkLabel(self.title_frame, text = "Gewinner! ", font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15, fg_color = "green")
+        self.draw_1_label = ctk.CTkLabel(self.title_frame, text = "Unentschieden", font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15, fg_color = "grey")
+        self.draw_2_label = ctk.CTkLabel(self.title_frame, text = "Unentschieden", font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15, fg_color = "grey")
+        if(self.blue_score.total_score.get() > self.red_score.total_score.get()):
+            self.winner_label.grid(row = 0, column = 0, sticky = 'nsew', padx = 5 * scaling_unit, pady = 5 * scaling_unit)
+            self.draw_1_label.grid_forget()
+            self.draw_2_label.grid_forget()
+        elif(self.blue_score.total_score.get() < self.red_score.total_score.get()):
+            self.winner_label.grid(row = 0, column = 2, sticky = 'nsew', padx = 5 * scaling_unit, pady = 5 * scaling_unit)
+            self.draw_1_label.grid_forget()
+            self.draw_2_label.grid_forget()
+        else:
+            self.draw_2_label.grid(row = 0, column = 0, sticky = 'nsew', padx = 5 * scaling_unit, pady = 5 * scaling_unit)
+            self.draw_1_label.grid(row = 0, column = 2, sticky = 'nsew', padx = 5 * scaling_unit, pady = 5 * scaling_unit)
+            self.winner_label.grid_forget()
+
+        self.highgoal = self.table_Entry(self.scoring_frame, 0, 0, "Stufe 3", color = "black", colored_tiles = True)
+        self.highgoal.pack(side = 'top', expand = True, fill = tk.BOTH)
+
+        self.midgoal = self.table_Entry(self.scoring_frame, 0, 0 , "Stufe 2", color = "black", colored_tiles = True)
+        self.midgoal.pack(side = 'top', expand = True, fill = tk.BOTH)
+        
+        self.lowgoal = self.table_Entry(self.scoring_frame, 0, 0 , "Stufe 1", color = "black", colored_tiles = True)
+        self.lowgoal.pack(side = 'top', expand = True, fill = tk.BOTH)
+        
+        self.parking = self.table_Entry(self.scoring_frame, 0, 0 , "Parken", color = "black", colored_tiles = True)
+        self.parking.pack(side = 'top', expand = True, fill = tk.BOTH)
+
+        self.penalty = self.table_Entry(self.scoring_frame, 0, 0, "Strafen", color = "black", colored_tiles = True)
+        self.penalty.pack(side = 'top', expand = True, fill = tk.BOTH)
+        
+
+        self.total = self.table_Entry(self.scoring_frame, 0, 0 , "Gesamt", color = "#d834eb", colored_tiles = False)
+        self.total.pack(side = 'top', expand = True, fill = tk.BOTH)
+
+        
+    #use for in display, e.g. for settings
+    class table_Entry(ctk.CTkFrame):
+        def __init__(self, master, score_blue, score_red, category, color, colored_tiles):
+            super().__init__(master, fg_color = color, corner_radius = 0)
+
+            if(colored_tiles):
+                self.blue = ctk.CTkLabel(self, text = score_blue, fg_color = bluecolor, font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15, width = 60)
+                self.blue.pack(side = 'left', fill = tk.BOTH, expand = False, padx = 5 * scaling_unit, pady = 5 * scaling_unit)
+
+                self.category = ctk.CTkLabel(self, text = category, fg_color = "transparent", font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 0, width = 60)
+                self.category.pack(side = 'left', fill = tk.BOTH, expand = True, padx = 5 * scaling_unit, pady = 5 * scaling_unit)
+
+                self.red = ctk.CTkLabel(self, text = score_red, fg_color = redcolor, font = ('Helvetica', 20 * scaling_unit, 'bold'), corner_radius = 15, width = 60)
+                self.red.pack(side = 'left', fill = tk.BOTH, expand = False, padx = 5 * scaling_unit, pady = 5 * scaling_unit)
+            else:
+                self.blue = ctk.CTkLabel(self, text = score_blue, fg_color = color, font = ('Helvetica', 60 * scaling_unit, 'bold'), corner_radius = 15, width = 60)
+                self.blue.pack(side = 'left', fill = tk.BOTH, expand = False, padx = 5 * scaling_unit, pady = 5 * scaling_unit)
+
+                self.category = ctk.CTkLabel(self, text = category, fg_color = "transparent", font = ('Helvetica', 60 * scaling_unit, 'bold'), corner_radius = 0, width = 60)
+                self.category.pack(side = 'left', fill = tk.BOTH, expand = True, padx = 5 * scaling_unit, pady = 5 * scaling_unit)
+
+                self.red = ctk.CTkLabel(self, text = score_red, fg_color = color, font = ('Helvetica', 60 * scaling_unit, 'bold'), corner_radius = 15, width = 60)
+                self.red.pack(side = 'left', fill = tk.BOTH, expand = False, padx = 5 * scaling_unit, pady = 5 * scaling_unit)
+
+        def reconfigure(self, new_blue_score, new_red_score):
+
+            self.blue.configure(text = new_blue_score)
+            self.red.configure(text = new_red_score)
 class MatchStatusConsole(ctk.CTkFrame):
     def __init__(self, master, blue_score, red_score):
         super().__init__(master, fg_color = 'grey')
@@ -90,11 +234,20 @@ class MatchStatusConsole(ctk.CTkFrame):
         self.pointsFrame = ctk.CTkFrame(self, fg_color = 'black')
         self.pointsFrame.grid(row = 1, column = 1, rowspan = 2, sticky = 'nsew')
 
-        points_blue_label = ctk.CTkLabel(self.pointsFrame, textvariable = blue_score.total_score, fg_color = bluecolor, font = ('Helvetica', 60 * scaling_unit_height, 'bold'), )
-        points_red_label = ctk.CTkLabel(self.pointsFrame, textvariable = red_score.total_score, fg_color = redcolor, font = ('Helvetica', 60 * scaling_unit_height, 'bold'), )
+        self.pointsFrame.columnconfigure(0, weight = 1, uniform = '1')
+        self.pointsFrame.columnconfigure(1, weight = 1, uniform = '1')
+
+        self.pointsFrame.rowconfigure(0,weight = 1 )
+
+
+        self.points_blue_label = ctk.CTkLabel(self.pointsFrame, textvariable = blue_score.total_score, fg_color = bluecolor, font = ('Helvetica', 60 * scaling_unit_height, 'bold'), )
+        self.points_red_label = ctk.CTkLabel(self.pointsFrame, textvariable = red_score.total_score, fg_color = redcolor, font = ('Helvetica', 60 * scaling_unit_height, 'bold'), )
         
-        points_blue_label.pack(side = tk.LEFT, fill = "both", expand = True)
-        points_red_label.pack(side = tk.RIGHT, fill = "both", expand = True)
+        self.points_blue_label.grid(column = 0, row = 0, sticky = 'nsew')
+        self.points_red_label.grid(column = 1, row = 0, sticky = 'nsew')
+
+        #disable the real time score when match is finished
+        match_settings.match_stopped.trace_add("write", self.hide_rt_score)
 
         #for continuously updating progress bar
         match_settings.current_time.trace_add("write", self.update_progress_bar)
@@ -119,6 +272,22 @@ class MatchStatusConsole(ctk.CTkFrame):
 
         current_time_seconds = match_settings.current_time.get()
         self.progress.set(1- float(current_time_seconds) / float(match_settings.total_matchtime))
+
+    def hide_rt_score(self, *args):
+            red_score = self.master.red_score.total_score.get()
+            blue_score = self.master.blue_score.total_score.get()
+
+            if(match_settings.match_stopped.get()):
+                self.points_blue_label.configure( textvariable = '')
+                self.points_red_label.configure(textvariable = '')
+
+                self.points_blue_label.configure(text = blue_score)
+                self.points_red_label.configure(text = red_score)
+                print("RT score disabled")
+            else:
+                self.points_blue_label.configure(textvariable = self.master.blue_score.total_score)
+                self.points_red_label.configure(textvariable = self.master.red_score.total_score)
+                print("RT score re-enabled")
 
 
 
